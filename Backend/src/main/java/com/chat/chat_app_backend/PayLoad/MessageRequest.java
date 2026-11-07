@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Setter
 @Getter
@@ -16,5 +16,5 @@ public class MessageRequest {
     private String content;
     private String sender;
     private String roomId;
-    private LocalDateTime messageTime;
+    private Instant messageTime;
 }

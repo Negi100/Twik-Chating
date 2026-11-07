@@ -12,7 +12,7 @@ export const JoinCreateChat = () => {
     userName: "",
   })
 
-  const {roomId , userName , setRoomId , setCurrentUser, setConnected} = useChatContext()
+  const {setRoomId , setCurrentUser, setConnected} = useChatContext()
   const navigate = useNavigate()
 
   function handleFormInputChange(event){
@@ -23,7 +23,7 @@ export const JoinCreateChat = () => {
   }
 
   function validateForm(){
-    if(detail.roomId === "" || detail.userName === ""){
+    if(detail.roomId.trim() === "" || detail.userName.trim() === ""){
       toast.error("Invalid Input")
       return false;
     }
@@ -34,7 +34,7 @@ export const JoinCreateChat = () => {
     if(validateForm()){
       // join chat
       try{
-        const room = await joinChatAPI(detail.roomId)
+        const room = await joinChatAPI(detail.roomId.trim())
         toast.success("joined..")
         setCurrentUser(detail.userName)
         setRoomId(room.roomId)
@@ -56,11 +56,9 @@ export const JoinCreateChat = () => {
   async function createRoom(){
     if(validateForm()){
       // create room
-      console.log(detail)
       // call api to create room on backend
       try{
-        const response = await createRoomAPI(detail.roomId)
-        console.log(response)
+        const response = await createRoomAPI(detail.roomId.trim())
         toast.success("Room created Successfully")
         //join the room
         setCurrentUser(detail.userName)
@@ -75,7 +73,7 @@ export const JoinCreateChat = () => {
         if(error.status == 400){
           toast.error("Room Id already exist !!")
         }else{
-          console.log("Error in creating room")
+          toast.error("Error in creating room !!")
         }
       }
     }

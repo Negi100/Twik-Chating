@@ -20,13 +20,12 @@ const ChatPage = () => {
         if(!connected){
             navigate("/")
         }
-    }, [connected , roomId , currentUser])
+    }, [connected, navigate])
 
 
 
 const [messages, setMessages] = useState([]);
 const [input, setInput] = useState("");
-const inputRef = useRef(null)
 const chatBoxRef = useRef(null)
 const [stompClient, setStompClient] = useState(null)
 
@@ -48,7 +47,7 @@ useEffect(() => {
      if (connected) {
         loadMessage();
     }
-},[])
+},[connected, roomId])
 
 // scroll down
 
@@ -66,33 +65,34 @@ useEffect(() => {
    // subscribe
 
    useEffect(() => {
-        const connectWebSocket= () => {
-            // sockJS
+        if (!connected || !roomId) return;
 
-            const sock =new SockJS(`${baseURL}/chat`)
-            const client = Stomp.over(sock)
+        const sock = new SockJS(`${baseURL}/chat`)
+        const client = Stomp.over(sock)
+        client.debug = () => {} // silence STOMP logs in production
 
-            client.connect({}, () => {
-   
-                setStompClient(client)
-                toast.success("Connected")
-                client.subscribe(`/topic/room/${roomId}`, (message) => {
-                    console.log(message)
-                    const newMessage = JSON.parse(message.body)
-                    setMessages((prev) => [...prev, newMessage])
-                    //rest of the work after success reveiving the message 
-                })
+        client.connect({}, () => {
+            setStompClient(client)
+            toast.success("Connected")
+            client.subscribe(`/topic/room/${roomId}`, (message) => {
+                const newMessage = JSON.parse(message.body)
+                setMessages((prev) => [...prev, newMessage])
             })
+        }, () => {
+            toast.error("Connection to chat server lost")
+        })
+
+        // close the socket when leaving the page so we don't leak connections
+        return () => {
+            if (client.connected) client.disconnect()
         }
-        connectWebSocket()
-   },[roomId])
+   },[roomId, connected])
 
 
 //send message handle
 
  const sendMessage = async () =>{
     if(stompClient && connected && input.trim()) {
-        console.log(input)
 
         const message= {
             sender:currentUser,
@@ -110,7 +110,7 @@ useEffect(() => {
  // logout
 
     function handleLogOut(){
-        stompClient.disconnect()
+        if (stompClient?.connected) stompClient.disconnect()
         setConnected(false)
         setRoomId('')
         setCurrentUser('')
